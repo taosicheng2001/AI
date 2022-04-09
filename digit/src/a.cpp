@@ -212,86 +212,45 @@ int h2(const string current_string){
         // No map method 
         if(usingmap == false)
         {
-            auto heigh = abs(target_pos%5 - current_pos%5);
-            auto width = abs(target_pos/5 - current_pos/5);
-            auto direct_manhatten = heigh + width;
-            auto manhatten = 0;
+            // reflect pos into (x,y)
+            int current_x = current_pos%5;
+            int current_y = current_pos/5;
+            int target_x  = target_pos%5;
+            int target_y  = target_pos/5;
 
-            // cout << "direct_manhatten: " <<  direct_manhatten << endl;
+            // current coordinate to four space channel gate
+            auto manhantten2up = abs(current_x-2) + current_y;
+            auto manhantten2Left = current_x + abs(current_y-2);
+            auto manhantten2Down = abs(current_x-2) + 4 - current_y;
+            auto manhantten2Right = 4 - current_x + abs(current_y - 2);
+            auto min_manhantten2Channel = min( manhantten2Down , min(manhantten2up , min( manhantten2Right , manhantten2Left ) ) );
 
-            if(current_pos == 0 || current_pos == 4 || current_pos == 20 || current_pos == 24)
+            // real manhantten distance only decided by 1.direct manhantten 2.using nearest space channel 
+            // using nearest space channel
+            int manhantten_space_channel;
+            if(min_manhantten2Channel == manhantten2up)
             {
-                if(direct_manhatten == 5)
-                    manhatten = 4;
-                else if(direct_manhatten == 6)
-                    manhatten = 3;
-                else if(direct_manhatten == 7)
-                    manhatten = 4;
-                else if(direct_manhatten == 8)
-                    manhatten = 5;
-                else 
-                    manhatten = direct_manhatten;
+                manhantten_space_channel = min_manhantten2Channel + abs(target_x - 2) + 4 - target_y;
+            }
+            else if(min_manhantten2Channel == manhantten2Down)
+            {
+                manhantten_space_channel = min_manhantten2Channel + abs(target_x - 2) + target_y;
+            }
+            else if(min_manhantten2Channel == manhantten2Left)
+            {
+                manhantten_space_channel = min_manhantten2Channel  + 4 - target_x + abs(target_y - 2);
+            }
+            else
+            {
+                manhantten_space_channel = min_manhantten2Channel + target_x + abs(target_y -2);
             }
 
-            if(current_pos == 1 || current_pos == 3 || current_pos == 9 || current_pos == 19 || current_pos == 23 
-                || current_pos == 21 || current_pos == 15 || current_pos == 5)
-            {
-                if(direct_manhatten == 4)
-                    manhatten = 3;
-                else if(direct_manhatten == 5)
-                    manhatten = 2;
-                else if(direct_manhatten == 6)
-                    manhatten = 3;
-                else if(direct_manhatten == 7)
-                    manhatten = 4;
-                else 
-                    manhatten = direct_manhatten;
-            }
+            // direct manhantten
+            int manhantten_direct;
+            manhantten_direct = abs(target_x - current_x) + abs(target_y - current_y);
 
-            if(current_pos == 2 || current_pos == 10 || current_pos == 22 || current_pos == 24)
-            {
-                if(direct_manhatten == 3)
-                    manhatten = 2;
-                else if(direct_manhatten == 4)
-                    manhatten = 1;
-                else if(direct_manhatten == 5)
-                    manhatten = 2;
-                else if(direct_manhatten == 6)
-                    manhatten = 3;
-                else 
-                    manhatten = direct_manhatten;
-            }
-
-            if(current_pos == 6 || current_pos == 8 || current_pos == 16 || current_pos == 18)
-            {
-                if(direct_manhatten == 4)
-                    manhatten = 3;
-                else if(direct_manhatten == 5)
-                    manhatten = 4;
-                else if(direct_manhatten == 6)
-                    manhatten = 5;
-                else 
-                    manhatten = direct_manhatten;
-            }
-
-            if(current_pos == 7 || current_pos == 11 || current_pos == 17 || current_pos == 13)
-            {
-                if(direct_manhatten == 3)
-                    manhatten = 2;
-                else if(direct_manhatten == 4)
-                    manhatten = 3;
-                else if(direct_manhatten == 5)
-                    manhatten= 4;
-                else 
-                    manhatten = direct_manhatten;
-            }
-
-            if(current_pos == 12)
-                manhatten = direct_manhatten;
-
-            // cout << "real_manhatten: " <<  manhatten << endl;
-
-            heristic_value += manhatten;
+            heristic_value += min(manhantten_direct,manhantten_space_channel);
+            
         }
 
         // get manhatten distance from map
