@@ -1,6 +1,9 @@
 /*
     Optimazation:
     1. reflect stars number to charactor a-y while black hole to z
+    2. h2 have two stages 
+       1) when heristic is small use direct reflecting
+       2) when heristic is big build map and just read from map
 */
 
 #include<vector>
@@ -14,8 +17,6 @@
 #include"chrono"
 
 using namespace std;
-
-// #define DEBUG
 
 // enum
 enum DIRECTION{
@@ -52,6 +53,39 @@ int h1(const string current_string){
     }
 
     return heristic_value;
+}
+
+bool NotContrast(char DIR,int direction)
+{
+    switch (DIR)
+    {
+        case('U'):
+        {
+            if(direction == down)
+                return false;
+            break;
+        }
+        case('D'):
+        {
+            if(direction == up)
+                return false;
+            break;
+        }
+        case('L'):
+        {
+            if(direction == DIRECTION::right)
+                return false;
+            break;
+        }
+        case('R'):
+        {
+            if(direction == DIRECTION::left)
+                return false;
+            break;
+        }
+    }
+
+    return true;
 }
 
 // self-def sort struct for h1 function
@@ -340,7 +374,6 @@ bool goal_test(const string current_string)
     return true;
 }
 
-
 // neighbor function
 bool neighbor(const string &current_string, string & neighbor_string,int direction)
 {
@@ -581,37 +614,6 @@ void A_h1(const vector<vector<int>>  &start, const vector<vector<int>>  &target)
 #endif
 
     }
- 
-    // rebuild action path
-    if(goal_test(open_list.top()) == true)
-    {
-        vector<char> action_path;
-        auto iter = came_from.find(open_list.top());
-        auto parent = iter->second.first;
-        auto action = iter->second.second;
-
-        while (parent != "NONE")
-        {
-            action_path.push_back(action);
-            iter = came_from.find(parent);
-            parent = iter->second.first;
-            action = iter->second.second;
-            
-        }   
-
-        reverse(action_path.begin(),action_path.end());
-        
-        cout << "Action Squence: ";
-        for(int i=0;i<action_path.size();i++)
-            cout << action_path[i];
-        cout << endl << "Steps Cost: " << action_path.size() << endl;
-
-    }
-    else{
-        cout << "No Solution" << endl;
-    }
-        
-    
 
     return;
 }
@@ -728,48 +730,238 @@ void A_h2(const vector<vector<int>>  &start, const vector<vector<int>>  &target)
 #endif
 
     }
- 
-    // rebuild action path
-    if(goal_test(open_list.top()) == true)
-    {
-        vector<char> action_path;
-        auto iter = came_from.find(open_list.top());
-        auto parent = iter->second.first;
-        auto action = iter->second.second;
 
-        while (parent != "NONE")
-        {
-            action_path.push_back(action);
-            iter = came_from.find(parent);
-            parent = iter->second.first;
-            action = iter->second.second;
-            
-        }   
-
-        reverse(action_path.begin(),action_path.end());
-        
-        cout << "Action Squence: ";
-        for(int i=0;i<action_path.size();i++)
-            cout << action_path[i];
-        cout << endl << "Steps Cost: " << action_path.size() << endl;
-
-    }
-    else{
-        cout << "No Solution" << endl;
-    }
-        
-    
-
-    return;
     return;
 }
+
 void IDA_h1(const vector<vector<int>>  &start, const vector<vector<int>>  &target){
+    
+    int (*hf)(const string);
+    hf = h1;
+
+    /* reflect start to target */
+    status2str(start , start_string);
+    status2str(target, target_string);
+
+    // set initial d_limit and infinite_d_limit
+    int d_limit = hf(start_string);
+    int infinite_d_limit = INT16_MAX;
+
+    // run IDA*
+    bool stop_flag = false;
+    while (d_limit < INT16_MAX)
+    {
+        // list for work
+        queue<pair<string,int>> worklist;
+        map<string,bool> InPath;
+
+        // push initial node into list
+        auto next_d_limit = infinite_d_limit;
+        came_from[start_string] = {"NONE",'$'};
+        
+        worklist.push({start_string,hf(start_string)+cost_so_far[start_string]});
+
+        while (!worklist.empty())
+        {
+            auto current_node = worklist.front();
+            worklist.pop();
+
+            auto next_cost = cost_so_far[current_node.first] + 1;
+
+            if(current_node.second > d_limit)
+            {
+                next_d_limit = min(next_d_limit,current_node.second);
+            }
+            else
+            {
+                // goal test
+                if(goal_test(current_node.first) == true)
+                {
+                    stop_flag = true;
+                    break;
+                }
+                
+                // adding neighbor
+                for(int direction=0;direction<4;direction++){
+                    // get neighbor string according to directions
+                    string neighbor_string(25,0);
+                    auto flag = neighbor(current_node.first,neighbor_string,direction);
+
+                    // skip if neighbor is invalid , if neoghbor in map 
+                    auto DIR = came_from.find(neighbor_string)->second.second;
+                    auto iter = cost_so_far.find(neighbor_string);
+
+                    if(flag == false || NotContrast(DIR,direction) == false || ( iter != cost_so_far.end() && iter->second < next_cost ))
+                    {
+                        continue;
+                    }
+
+                    // set direction
+                    switch (direction)
+                    {
+                        case DIRECTION::up:
+                        {
+                            DIR = 'U';
+                            break;
+                        }
+                        
+                        case DIRECTION::down:
+                        {
+                            DIR = 'D';
+                            break;
+                        }
+
+                        case DIRECTION::left:
+                        {
+                            DIR = 'L';
+                            break;
+                        }
+
+                        case DIRECTION::right:
+                        {
+                            DIR = 'R';
+                            break;
+                        }
+                    }
+
+                    // insert neighbor node
+                    worklist.push({neighbor_string,hf(neighbor_string)+next_cost});
+                    came_from[neighbor_string] = {current_node.first,DIR};
+                    cost_so_far[neighbor_string] = next_cost;
+
+#ifdef DEBUG
+    cout << neighbor_string << endl;
+#endif                
+                }
+            }
+
+        }
+
+        // if get goal
+        if(stop_flag == true)
+            break;
+        
+        // if do not get goal
+        d_limit = next_d_limit;
+        
+    }
+
     return;
 }
 void IDA_h2(const vector<vector<int>>  &start, const vector<vector<int>>  &target){
+
+    int (*hf)(const string);
+    hf = h2;
+
+    /* reflect start to target */
+    status2str(start , start_string);
+    status2str(target, target_string);
+
+    // set initial d_limit and infinite_d_limit
+    int d_limit = hf(start_string);
+    int infinite_d_limit = INT16_MAX;
+
+    // run IDA*
+    bool stop_flag = false;
+    while (d_limit < INT16_MAX)
+    {
+        // list for work
+        queue<pair<string,int>> worklist;
+        map<string,bool> InPath;
+
+        // push initial node into list
+        auto next_d_limit = infinite_d_limit;
+        came_from[start_string] = {"NONE",'$'};
+        
+        worklist.push({start_string,hf(start_string)+cost_so_far[start_string]});
+
+        while (!worklist.empty())
+        {
+            auto current_node = worklist.front();
+            worklist.pop();
+
+            auto next_cost = cost_so_far[current_node.first] + 1;
+
+            if(current_node.second > d_limit)
+            {
+                next_d_limit = min(next_d_limit,current_node.second);
+            }
+            else
+            {
+                // goal test
+                if(goal_test(current_node.first) == true)
+                {
+                    stop_flag = true;
+                    break;
+                }
+                
+                // adding neighbor
+                for(int direction=0;direction<4;direction++){
+                    // get neighbor string according to directions
+                    string neighbor_string(25,0);
+                    auto flag = neighbor(current_node.first,neighbor_string,direction);
+
+                    // skip if neighbor is invalid , if neoghbor in map 
+                    auto DIR = came_from.find(neighbor_string)->second.second;
+                    auto iter = cost_so_far.find(neighbor_string);
+
+                    if(flag == false || NotContrast(DIR,direction) == false || ( iter != cost_so_far.end() && iter->second < next_cost ))
+                    {
+                        continue;
+                    }
+
+                    // set direction
+                    switch (direction)
+                    {
+                        case DIRECTION::up:
+                        {
+                            DIR = 'U';
+                            break;
+                        }
+                        
+                        case DIRECTION::down:
+                        {
+                            DIR = 'D';
+                            break;
+                        }
+
+                        case DIRECTION::left:
+                        {
+                            DIR = 'L';
+                            break;
+                        }
+
+                        case DIRECTION::right:
+                        {
+                            DIR = 'R';
+                            break;
+                        }
+                    }
+
+                    // insert neighbor node
+                    worklist.push({neighbor_string,hf(neighbor_string)+next_cost});
+                    came_from[neighbor_string] = {current_node.first,DIR};
+                    cost_so_far[neighbor_string] = next_cost;
+
+#ifdef DEBUG
+    cout << neighbor_string << endl;
+#endif                
+                }
+            }
+
+        }
+
+        // if get goal
+        if(stop_flag == true)
+            break;
+        
+        // if do not get goal
+        d_limit = next_d_limit;
+        
+    }
+
     return;
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -866,5 +1058,34 @@ int main(int argc, char* argv[])
     auto duration = chrono::duration_cast<chrono::microseconds>(finish_time - start_time);
     auto time_cost = double(duration.count())*chrono::microseconds::period::num/ chrono::microseconds::period::den;
 
-    cout << "Time Cost: " << time_cost << " s" << endl;
+    // rebuild action path
+    if(came_from.find(target_string) != came_from.end())
+    {
+        vector<char> action_path;
+        auto iter = came_from.find(target_string);
+        auto parent = iter->second.first;
+        auto action = iter->second.second;
+
+        while (parent != "NONE")
+        {
+            action_path.push_back(action);
+            iter = came_from.find(parent);
+            parent = iter->second.first;
+            action = iter->second.second;
+            
+        }   
+
+        reverse(action_path.begin(),action_path.end());
+        
+        for(int i=0;i<action_path.size();i++)
+            cout << action_path[i];
+
+    }
+    else{
+        cout << "x,x" << endl;
+        return 0;
+    }  
+
+    cout << "," << time_cost << endl;
+    
 }
