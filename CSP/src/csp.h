@@ -1,0 +1,302 @@
+#include<iostream>
+#include<map>
+#include<utility>
+// #include<boost/smart_ptr.hpp>
+// #include<boost/make_shared.hpp>
+
+enum Rank{
+    senior,
+    junior
+};
+
+enum type{
+    work,
+    notwork,
+    either,
+    none
+};
+
+
+
+class csp;
+
+class variable
+{
+private:
+    int order;  // oreder number of worker
+    int rank;   // rank of workrer
+    int time;   // date of this variable
+    bool if_assigned;   // flag for whether assigned
+    int remain_assignment; // -1 reprensent 0 or 1
+
+public:
+    variable(int order, int rank, int time):order(order),rank(rank),time(time)
+    {
+        if_assigned = false;
+        remain_assignment = type::either;
+        // std::cout << "rank:" << rank << std::endl;
+    };
+
+    int get_order()
+    {
+        return order;
+    }
+
+    int get_rank()
+    {
+        return rank;
+    }
+
+    int get_time()
+    {
+        return time;
+    }
+
+    bool assigned_check()
+    {
+        return if_assigned;
+    }
+
+    int get_remain_assignment()
+    {
+        return remain_assignment;
+    }
+
+};
+
+class constraint
+{
+public:
+    virtual bool test(csp* csp) = 0;
+    virtual ~constraint(){}
+};
+
+class csp
+{
+private:
+    int ** assignment;
+    int worker_num;
+    std::map<std::pair<int,int>,variable*> variables;
+    std::map<constraint*,int> constraints;
+    int assigned_variable_num;
+
+public:
+    csp(int worker_num):worker_num(worker_num)
+    {
+        assigned_variable_num = 0;
+        initial_assignment();
+    }
+
+    csp(int worker_num, int** assignment):worker_num(worker_num),assignment(assignment){};
+
+
+    void initial_assignment()
+    {
+        // malloc assigment
+        assignment = new int*[7];
+        for(int i=0;i<worker_num;i++)
+            assignment[i] = new int[7];
+        
+        // initial assignment
+        for(int i=0;i<worker_num;i++)
+        {
+            for(int j=0;j<7;j++)
+                assignment[i][j] = -1;
+        }
+    }
+
+    int** get_assignment()
+    {
+        return assignment;
+    }
+
+    int get_workernum()
+    {
+        return worker_num;
+    }
+    
+    std::map<std::pair<int,int>,variable*> get_variables()
+    {
+        return variables;
+    }
+
+    std::map<constraint*,int> get_constraint()
+    {
+        return constraints;
+    }
+
+    void add_variable(variable* new_variable)
+    {
+        //std::cout << new_variable->get_order() << " " << new_variable->get_time() << std::endl;
+        variables[{new_variable->get_order(),new_variable->get_time()}] = new_variable;
+    }
+
+    void add_constraint(constraint* new_constraint)
+    {
+        constraints[new_constraint] = 1;
+    }
+
+    void drop_constraint(constraint* old_constraint)
+    {
+        constraints.erase(old_constraint);
+    }
+
+
+};
+
+
+// every worker should relax more than min_relax_day
+class min_relax_constraint: public constraint
+{
+private:
+    int min_relax_day;
+
+public:
+    min_relax_constraint(int input_relax_day):min_relax_day(input_relax_day){};
+    virtual bool test(csp* csp)
+    {
+        auto assignment = csp->get_assignment();
+        for(int i=0;i<csp->get_workernum();i++)
+        {
+            // get work day for each worker
+            auto work_day = 0;
+            for(int j=0;j<7;j++)
+            {
+                if(assignment[i][j] == 1)
+                    work_day++;
+            }
+
+            // not satisfied
+            if(work_day + min_relax_day > 7)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+// each worker should not continue relax than max_continue_relax_day
+class max_continue_relax_constraint: public constraint
+{
+private:
+    int max_continue_relax_day;
+
+public:
+    max_continue_relax_constraint(int input_day):max_continue_relax_day(input_day){};
+    virtual bool test(csp* csp)
+    {
+        auto assignment = csp->get_assignment();
+        for(int i=0;i<csp->get_workernum();i++)
+        {
+            auto continue_relax = 0;
+            for(int j=0;j<7;j++)
+            {
+                // get continue relax day for each worker
+                if(assignment[i][j] == 0)
+                    continue_relax++;
+                if(assignment[i][j] == 1)
+                    continue_relax = 0;
+
+                // not satisfied
+                if(continue_relax >= max_continue_relax_day)
+                    return false;
+            }
+        }
+        return true;
+    }  
+};
+
+// worker each day should be more than min_workernum_eachday 
+class min_workernum_eachday_constraint: public constraint
+{
+private:
+    int min_workernum_eachday;
+public:
+    min_workernum_eachday_constraint(int input_num):min_workernum_eachday(input_num){};
+    virtual bool test(csp* csp)
+    {
+        auto assignment = csp->get_assignment();
+        for(int j=0;j<7;j++)
+        {
+            auto workernum = 0;
+            for(int i=0;i<csp->get_workernum();i++)
+            {
+                if(assignment[i][j] == 1)
+                    workernum++;
+            }
+
+            if(workernum >= min_workernum_eachday)
+                return true;
+            else
+                return false;
+        }
+
+        return true;
+    }
+
+};
+
+// each day there should be a senior worker
+class senior_worker_eachday_constraint:public constraint
+{
+private:
+    int min_workernum;
+
+public:
+    senior_worker_eachday_constraint(int minworker):min_workernum(minworker){};
+    virtual bool test(csp* csp)
+    {
+        auto assignment = csp->get_assignment();
+        auto variables = csp->get_variables();
+
+        for(int j=0;j<7;j++)
+        {
+            auto flag = false;
+            for(int i=0;i<csp->get_workernum();i++)
+            {   
+                // 
+                if(assignment[i][j] == 1)
+                {
+                    //std::cout << i << " " << j << std::endl;
+                    //std::cout <<  variables.find({i,j})->second->get_order() << " " << variables.find({i,j})->second->get_time() << std::endl << std::endl;
+                    if(variables.find({i,j})->second->get_rank() == senior)
+                    {
+                        //std::cout << i << " is senior" << std::endl;
+                        flag = true;
+                    }
+                }
+            }
+
+            if(flag == true)
+                continue;
+            else
+                return false;
+        }
+
+        return true;
+    }
+};
+
+// worker1 and worker2 should not work in one day
+class not_one_day_constraint: public constraint
+{
+private:
+    int workernum1;
+    int workernum2;
+
+public:
+    not_one_day_constraint(int worker1, int worker2):workernum1(worker1-1),workernum2(worker2-1){};
+    virtual bool test(csp* csp)
+    {
+        auto assignment = csp->get_assignment();
+        for(int j=0;j<7;j++)
+        {
+            if(assignment[workernum1][j] == 1 && assignment[workernum2][j] == 1)
+                return false;
+        }
+
+        return true;
+    }
+};
