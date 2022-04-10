@@ -118,63 +118,19 @@ int main(){
     not_one_day_constraint constraint6(2,3);
     not_one_day_constraint constraint7(3,6);
 
-    // shared ptr
-    std::shared_ptr<min_relax_constraint> ptr_1(&constraint1); 
-    std::shared_ptr<constraint> ptr_save_1;
-    ptr_save_1 = std::dynamic_pointer_cast<constraint>(ptr_1);
-    CSP.add_constraint(ptr_save_1);
-
-    std::shared_ptr<max_continue_relax_constraint> ptr_2(&constraint2); 
-    std::shared_ptr<constraint> ptr_save_2;
-    ptr_save_2 = std::dynamic_pointer_cast<constraint>(ptr_2);
-    CSP.add_constraint(ptr_save_2);
-    
-    std::shared_ptr<min_workernum_eachday_constraint> ptr_3(&constraint3); 
-    std::shared_ptr<constraint> ptr_save_3;
-    ptr_save_3 = std::dynamic_pointer_cast<constraint>(ptr_3);
-    CSP.add_constraint(ptr_save_3);
-
-    std::shared_ptr<senior_worker_eachday_constraint> ptr_4(&constraint4); 
-    std::shared_ptr<constraint> ptr_save_4;
-    ptr_save_4 = std::dynamic_pointer_cast<constraint>(ptr_4);
-    CSP.add_constraint(ptr_save_4);
-
-    std::shared_ptr<not_one_day_constraint> ptr_5(&constraint5); 
-    std::shared_ptr<constraint> ptr_save_5;
-    ptr_save_5 = std::dynamic_pointer_cast<constraint>(ptr_5);
-    CSP.add_constraint(ptr_save_5);
-
-    std::shared_ptr<not_one_day_constraint> ptr_6(&constraint6); 
-    std::shared_ptr<constraint> ptr_save_6;
-    ptr_save_6 = std::dynamic_pointer_cast<constraint>(ptr_6);
-    CSP.add_constraint(ptr_save_6);   
-
-    std::shared_ptr<not_one_day_constraint> ptr_7(&constraint7); 
-    std::shared_ptr<constraint> ptr_save_7;
-    ptr_save_7 = std::dynamic_pointer_cast<constraint>(ptr_7);
-    CSP.add_constraint(ptr_save_7);     
-
+    CSP.add_constraint(&constraint1);
+    CSP.add_constraint(&constraint2);
+    CSP.add_constraint(&constraint3);
+    CSP.add_constraint(&constraint4);
+    CSP.add_constraint(&constraint5);
+    CSP.add_constraint(&constraint6);
+    CSP.add_constraint(&constraint7);
     }
 
     BackTracking_Search(&CSP);
     auto assignment = CSP.get_assignment();
 
-        
-    // test
-    if(CSP.get_constraint().find(0)->second->test(&CSP))
-        cout << "C1 True!" << endl;
-    if(CSP.get_constraint().find(1)->second->test(&CSP))
-        cout << "C2 True!" << endl;
-    if(CSP.get_constraint().find(2)->second->test(&CSP))
-        cout << "C3 True!" << endl;
-    if(CSP.get_constraint().find(3)->second->test(&CSP))
-        cout << "C4 True!" << endl;
-    if(CSP.get_constraint().find(4)->second->test(&CSP))
-        cout << "C5 True!" << endl;
-    if(CSP.get_constraint().find(5)->second->test(&CSP))
-        cout << "C6 True!" << endl;
-    if(CSP.get_constraint().find(6)->second->test(&CSP))
-        cout << "C7 True!" << endl;
+    CSP.print_assign();
     
     exit(0);
     return 0;

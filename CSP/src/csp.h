@@ -85,7 +85,7 @@ private:
     int ** assignment;
     int worker_num;
     std::map<std::pair<int,int>,variable*> variables;
-    std::map<int,std::shared_ptr<constraint>> constraints;
+    std::map<int,constraint*> constraints;
     int assigned_variable_num;
     int cnt=0;
 
@@ -133,7 +133,7 @@ public:
         return variables;
     }
 
-    std::map<int,std::shared_ptr<constraint>> get_constraint()
+    std::map<int,constraint*> get_constraint()
     {
         return constraints;
     }
@@ -144,7 +144,7 @@ public:
         variables[{new_variable->get_order(),new_variable->get_time()}] = new_variable;
     }
 
-    void add_constraint(std::shared_ptr<constraint> new_constraint)
+    void add_constraint(constraint* new_constraint)
     {
         constraints[cnt] = new_constraint;
         std::cout << "Constraint " << cnt++ << " Active" << std::endl;
