@@ -100,10 +100,11 @@ public:
 
     void initial_assignment()
     {
+        assignment = (int **)malloc(sizeof(int*)*worker_num);
+
         // malloc assigment
-        assignment = new int*[7];
         for(int i=0;i<worker_num;i++)
-            assignment[i] = new int[7];
+            assignment[i] = (int*)malloc(sizeof(int)*7);
         
         // initial assignment
         for(int i=0;i<worker_num;i++)
