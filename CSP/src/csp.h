@@ -256,7 +256,7 @@ public:
     min_relax_constraint(int input_relax_day):min_relax_day(input_relax_day){};
     virtual bool test(csp* csp) const
     {
-        std::cout << "min relax day test!" << std::endl;
+        // std::cout << "min relax day test!" << std::endl;
         auto assignment = csp->get_assignment();
         for(int i=0;i<csp->get_workernum();i++)
         {
@@ -291,7 +291,7 @@ public:
     max_continue_relax_constraint(int input_day):max_continue_relax_day(input_day){};
     virtual bool test(csp* csp) const
     {
-        std::cout << "max rest test!" << std::endl;
+        // std::cout << "max rest test!" << std::endl;
         auto assignment = csp->get_assignment();
         for(int i=0;i<csp->get_workernum();i++)
         {
@@ -322,7 +322,7 @@ public:
     min_workernum_eachday_constraint(int input_num):min_workernum_eachday(input_num){};
     virtual bool test(csp* csp) const
     {
-        std::cout << "min worker test!" << std::endl;
+        // std::cout << "min worker test!" << std::endl;
         auto assignment = csp->get_assignment();
         auto not_complete = false;
 
@@ -363,7 +363,7 @@ public:
     senior_worker_eachday_constraint(int minworker):min_workernum(minworker){};
     virtual bool test(csp* csp) const
     {
-        std::cout << "senior worker test!" << std::endl;
+        // std::cout << "senior worker test!" << std::endl;
 
         auto assignment = csp->get_assignment();
         auto variables = csp->get_variables();
@@ -415,7 +415,7 @@ public:
     not_one_day_constraint(int worker1, int worker2):workernum1(worker1-1),workernum2(worker2-1){};
     virtual bool test(csp* csp) const
     {
-        std::cout << "not one day test!" << std::endl;
+        // std::cout << "not one day test!" << std::endl;
         auto assignment = csp->get_assignment();
         for(int j=0;j<7;j++)
         {

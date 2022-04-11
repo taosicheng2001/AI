@@ -1,8 +1,9 @@
 #include"./csp.h"
 #include<memory>
 #include<fstream>
+#include<ctime>
 
-#define DEBUG
+// #define DEBUG
 
 using namespace std;
 
@@ -156,13 +157,15 @@ int main(){
         CSP.add_constraint(&constraint7);
     }
 
-
-
+    clock_t start = clock();
     BackTracking_Search(&CSP);
+    clock_t end   = clock();
+    
     auto assignment = CSP.get_assignment();
-
     CSP.print_assign();
     
+    cout << "Time Cost: " << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
+
     fstream outfile;
     outfile.open("../output/output2.txt",ios::out);
     if(outfile){
