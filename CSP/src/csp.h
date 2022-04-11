@@ -2,6 +2,7 @@
 #include<map>
 #include<memory>
 #include<utility>
+
 // #include<boost/smart_ptr.hpp>
 // #include<boost/make_shared.hpp>
 
@@ -160,7 +161,7 @@ public:
     {
         // select unassignde  variable and return
 
-        // line first
+        // day first
         for(int j=0;j<7;j++)
         {
             for(int i=0;i<csp->get_workernum();i++)
@@ -171,6 +172,19 @@ public:
                     return var;
             }
         }
+
+        // column
+        // for(int i=0;i<csp->get_workernum();i++)
+        // {
+        //     for(int j=0;j<7;j++)
+        //     {
+        //         auto var = variables.find({i,j})->second;
+
+        //         if(var->assigned_check() == false)
+        //             return var;
+        //     }
+
+        // }       
  
 
         return nullptr;
