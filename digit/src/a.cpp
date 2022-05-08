@@ -52,7 +52,7 @@ int h1(const string current_string){
             heristic_value++;
     }
 
-    return heristic_value;
+    return heristic_value-1;
 }
 
 bool NotContrast(char DIR,int direction)
@@ -193,18 +193,6 @@ void buildmap(void)
             
             }
 
-#ifdef DEBUG
-    cout << i << " " << j << endl;
-    for(int i=0;i<5;i++)
-    {
-        for(int j=0;j<5;j++)
-            cout << vec[i][j] << " ";
-        cout <<endl;
-    }
-    cout << endl;
-
-#endif
-
             //build map
             for(int ii =0; ii < 5;ii++)
             {
@@ -217,8 +205,6 @@ void buildmap(void)
         }
 
     }
-
-
     return;
 }
 
@@ -848,6 +834,7 @@ void IDA_h1(const vector<vector<int>>  &start, const vector<vector<int>>  &targe
 
     return;
 }
+
 void IDA_h2(const vector<vector<int>>  &start, const vector<vector<int>>  &target){
 
     int (*hf)(const string);
@@ -1077,9 +1064,24 @@ int main(int argc, char* argv[])
 
         reverse(action_path.begin(),action_path.end());
         
+
         for(int i=0;i<action_path.size();i++)
             cout << action_path[i];
 
+        ofstream resultfile;
+        if(!strcmp(search_stradegy,"A_h1"))
+            resultfile.open("output_A_h1.txt",ios::out | ios::app);
+        else if (!strcmp(search_stradegy,"A_h2"))
+            resultfile.open("output_A_h2.txt",ios::out| ios::app);
+        else if (!strcmp(search_stradegy,"IDA_h1"))
+            resultfile.open("output_IDA_h1.txt",ios::out| ios::app);
+        else if (!strcmp(search_stradegy,"IDA_h2"))
+            resultfile.open("output_IDA_h2.txt",ios::out| ios::app);
+        
+        for(int i=0;i<action_path.size();i++){
+            resultfile << action_path[i];
+        }
+        resultfile << "," << time_cost << endl;
     }
     else{
         cout << "x,x" << endl;
